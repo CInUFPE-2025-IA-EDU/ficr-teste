@@ -1,1 +1,44 @@
+name: CI Checks
+on:
+  pull_request:
+  push:
+
+jobs:
+  quality-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install deps
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      - name: Lint (JSON report)
+        run: |
+          mkdir -p reports
+          npx eslint docs/main.js -f json -o reports/eslint.json || true
+
+      - name: HTML Validate (JSON report)
+        run: |
+          mkdir -p reports
+          npx html-validate --format json --output reports/htmlvalidate.json "docs/*.html" || true
+
+      - name: Prettier check
+        run: npx prettier --check docs/
+
+      - name: Upload quality artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: quality-report-pr-${{ github.event.pull_request.number || github.sha }}
+          path: reports
+          if-no-files-found: warn
 
