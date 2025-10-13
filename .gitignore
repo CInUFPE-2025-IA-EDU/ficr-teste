@@ -1,1 +1,11 @@
 
+node_modules/
+npm-debug.log*
+yarn-*.log*
+.DS_Store
+.vscode/
+.idea/
+dist/
+.cache/
+coverage/
+reports/
