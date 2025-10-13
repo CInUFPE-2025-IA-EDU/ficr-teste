@@ -1,1 +1,59 @@
+name: Auto Label PRs (SEMx + IA)
+on:
+  pull_request_target:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  label:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout policy
+        uses: actions/checkout@v4
+
+      - name: Detect week from title/branch
+        id: detect
+        run: |
+          TITLE="${{ github.event.pull_request.title }}"
+          BRANCH="${{ github.event.pull_request.head.ref }}"
+          SEM=""
+          if [[ "$TITLE" =~ (SEM[0-9]+) ]]; then SEM="${BASH_REMATCH[1]}"; fi
+          if [[ -z "$SEM" && "$BRANCH" =~ (SEM[0-9]+) ]]; then SEM="${BASH_REMATCH[1]}"; fi
+          echo "week=$SEM" >> $GITHUB_OUTPUT
+
+      - name: Read IA schedule
+        id: ia
+        run: |
+          WEEK="${{ steps.detect.outputs.week }}"
+          if [ -z "$WEEK" ]; then
+            echo "ia_label=" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          IA=$(jq -r --arg w "$WEEK" '.[$w] // empty' policy/ia_schedule.json)
+          if [ "$IA" = "ON" ]; then
+            echo "ia_label=IA:ON" >> $GITHUB_OUTPUT
+          elif [ "$IA" = "OFF" ]; then
+            echo "ia_label=IA:OFF" >> $GITHUB_OUTPUT
+          else
+            echo "ia_label=" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Apply labels
+        if: steps.detect.outputs.week != '' || steps.ia.outputs.ia_label != ''
+        run: |
+          set -e
+          labels=()
+          if [ -n "${{ steps.detect.outputs.week }}" ]; then labels+=("${{ steps.detect.outputs.week }}"); fi
+          if [ -n "${{ steps.ia.outputs.ia_label }}" ]; then labels+=("${{ steps.ia.outputs.ia_label }}"); fi
+          if [ ${#labels[@]} -gt 0 ]; then
+            curl -s -X POST \
+              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github+json" \
+              https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/labels \
+              -d "$(jq -n --argjson arr "$(printf '%s\n' "${labels[@]}" | jq -R . | jq -s .)" '{labels: $arr}')"
+          fi
 
