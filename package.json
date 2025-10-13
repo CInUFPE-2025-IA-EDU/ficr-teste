@@ -1,1 +1,21 @@
+{
+  "name": "ficr-teste",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "check": "npm run lint && npm run html-validate && npm run prettier-check",
+    "lint": "eslint docs/main.js",
+    "html-validate": "html-validate docs/*.html",
+    "prettier-check": "prettier --check docs/",
+    "prettier-fix": "prettier --write docs/",
+    "report:eslint": "eslint docs/main.js -f json -o reports/eslint.json || true",
+    "report:html": "html-validate --format json --output reports/htmlvalidate.json 'docs/*.html' || true",
+    "report": "mkdir -p reports && npm run report:eslint && npm run report:html"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "html-validate": "^8.7.4",
+    "prettier": "^3.3.3"
+  }
+}
 
