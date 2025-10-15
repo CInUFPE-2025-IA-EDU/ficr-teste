@@ -1,0 +1,29 @@
+name: Seed Issues from CSV/XLSX
+on:
+  workflow_dispatch:
+    inputs:
+      student_login:
+        description: 'Login GitHub do aluno (opcional; se vazio, não atribui)'
+        required: false
+        default: ''
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install pandas openpyxl requests
+      - name: Generate issues
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          STUDENT_LOGIN: ${{ inputs.student_login }}
+        run: |
+          python tools/seed_issues_from_csv.py tasks/requisitos_autopecas_formulario_html_css_tarefas.csv "$REPO" "$STUDENT_LOGIN"
