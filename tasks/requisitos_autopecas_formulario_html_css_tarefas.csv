@@ -1,0 +1,3 @@
+Semana,Titulo,Descricao,Criterios,CodigoAluno,Squad
+SEM1,Formulário de Peças - Estrutura,Crie o HTML do formulário com campos obrigatórios de peça,"- [ ] HTML5 válido; - [ ] Labels for/id; - [ ] `required` nos campos",ALN-001,A
+SEM2,Formulário de Peças - Validação,Adicione validação de tipos e mensagens de erro amigáveis,"- [ ] Validação HTML5; - [ ] Mensagens claras; - [ ] `npm run check` passando",ALN-001,A
